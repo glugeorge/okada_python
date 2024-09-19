@@ -124,7 +124,7 @@ def UB(xi,et,q,disl1,disl2,disl3,c0,c2):
         else:
             x = np.sqrt(xi2+q2)
             ai4 = 1/cdcd * (xi/rd*sdcd + 2*np.arctan((et*(x+q*cd)+x*(r+x)*sd)/(xi*(r+x)*cd)))
-        ai3 = (y+cd/rd-ale+sd*np.log(rd))/cdcd
+        ai3 = (y*cd/rd-ale+sd*np.log(rd))/cdcd
         ak1 = xi*(d11-y11*sd)/cd
         ak3 = (q*y11-y*d11)/cd
         aj3 = (ak1-aj2*sd)/cd

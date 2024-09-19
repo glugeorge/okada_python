@@ -1,3 +1,8 @@
 
 *.pyc
 *.mat
+.DS_Store
+.ipynb_checkpoints/unit_tests-checkpoint.ipynb
+*.png
+*.m
+.ipynb_checkpoints/streamlined_scripts_validation-checkpoint.ipynb
