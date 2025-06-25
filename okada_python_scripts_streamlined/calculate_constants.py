@@ -24,6 +24,47 @@ def DCCON0(alpha,dip):
               sd = sd, cd = cd, sdsd = sdsd, cdcd = cdcd, sdcd = sdcd, s2d = s2d, c2d = c2d)
     return c0
 
+def DCCON1(x,y,d,c0):
+    eps = 1e-6
+    sd = c0['sd']
+    cd = c0['cd']
+    c1 = {}
+    x = np.where(np.abs(x) < eps, 0, x)
+    y = np.where(np.abs(y) < eps, 0, y)
+    d = np.where(np.abs(d) < eps, 0, d)
+
+    c1['p'] = y*cd+d*sd
+    c1['q'] = y*sd-d*cd
+    c1['s'] = c1['p']*sd+c1['s']*cd
+    c1['t']= c1['p']*cd-c1['q']*sd
+    c1['xy']=x*y
+    c1['x2']=x*x
+    c1['y2']=y*y
+    c1['d2']=d*d
+    c1['r2']=c1['x2']+c1['y2']+c1['d2']
+    c1['r'] = np.sqrt(c1['r2'])
+    r0_condition = c1['r'] == 0
+    c1['r3'] = np.where(r0_condition, 0, c1['r']*c1['r2'])
+    c1['r5'] = np.where(r0_condition, 0, c1['r3']*c1['r2'])
+    c1['r7'] = np.where(r0_condition, 0, c1['r5']*c1['r2'])
+
+    c1['a3'] = np.where(r0_condition, 0, 1-3*c1['x2']/c1['r2'])
+    c1['a5'] = np.where(r0_condition, 0, 1-5*c1['x2']/c1['r2'])
+    c1['b3'] = np.where(r0_condition, 0, 1-3*c1['y2']/c1['r2'])
+    c1['c3'] = np.where(r0_condition, 0, 1-3*c1['d2']/c1['r2'])
+
+    c1['qr'] = np.where(r0_condition, 0, 3*c1['q']/c1['r5'])
+    c1['qrx'] = np.where(r0_condition, 0, 5*c1['qr']*x/c1['r2'])
+
+    c1['uy'] = np.where(r0_condition, 0, sd - 5*y*c1['q']/c1['r2'])
+    c1['uz'] = np.where(r0_condition, 0, cd + 5*d*c1['q']/c1['r2'])
+    c1['vy'] = np.where(r0_condition, 0, c1['s'] - 5*y*c1['p']*c1['q']/c1['r2'])
+    c1['vz'] = np.where(r0_condition, 0, c1['t'] + 5*d*c1['p']*c1['q']/c1['r2'])
+    c1['wy'] = np.where(r0_condition, 0, c1['uy']+sd)
+    c1['wz'] = np.where(r0_condition, 0, c1['uz']+cd)
+    return c1
+
+
 def DCCON2(xi,et,q,sd,cd,kxi,ket):
     eps = 1e-6
     c2 = {}

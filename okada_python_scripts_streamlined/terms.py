@@ -1,5 +1,351 @@
 import numpy as np
 
+def UA0(x,y,d,pot1,pot2,pot3,pot4,c0,c1):
+    ## Unpack variables
+    # from DCCON0
+    alp1 = c0['alp1']
+    alp2 = c0['alp2']
+    alp3 = c0['alp3']
+    alp4 = c0['alp4']
+    alp5 = c0['alp5']
+    sd   = c0['sd']
+    cd   = c0['cd']
+    sdsd = c0['sdsd']
+    cdcd = c0['cdcd']
+    sdcd = c0['sdcd']
+    s2d  = c0['s2d']
+    c2d  = c0['c2d']
+
+    # from DCCON1
+    p   = c1['p']
+    q   = c1['q']
+    s   = c1['s']
+    t   = c1['t']
+    xy  = c1['xy']
+    x2  = c1['x2']
+    y2  = c1['y2']
+    d2  = c1['d2']
+    r   = c1['r']
+    r2  = c1['r2']
+    r3  = c1['r3']
+    r5  = c1['r5']
+    qr  = c1['qr']
+    qrx = c1['qrx']
+    a3  = c1['a3']
+    a5  = c1['a5']
+    b3  = c1['b3']
+    c3  = c1['c3']
+    uy  = c1['uy']
+    vy  = c1['vy']
+    wy  = c1['wy']
+    uz  = c1['uz']
+    vz  = c1['vz']
+    wz  = c1['wz']
+    n_x, n_y, n_z = x.shape
+    u = np.zeros((n_x, n_y, n_z,12))
+    du = np.zeros((n_x, n_y, n_z,12))
+
+    # strike slip contribution
+    if pot1 != 0:
+        du[..., 0]  = alp1*q/r3    + alp2*x2*qr
+        du[..., 1]  = alp1*x/r3*sd + alp2*xy*qr
+        du[..., 2]  = -alp1*x/r3*cd + alp2*x*d*qr
+        du[..., 3]  = x*qr*(-alp1 + alp2*(1 + a5))
+        du[..., 4]  = alp1*a3/r3*sd + alp2*y*qr*a5
+        du[..., 5]  = -alp1*a3/r3*cd + alp2*d*qr*a5
+        du[..., 6]  = alp1*(sd/r3 - y*qr) + alp2*3*x2/r5*uy
+        du[..., 7]  = 3*x/r5*(-alp1*y*sd + alp2*(y*uy + q))
+        du[..., 8]  = 3*x/r5*(alp1*y*cd + alp2*d*uy)
+        du[..., 9]  = alp1*(cd/r3 + d*qr) + alp2*3*x2/r5*uz
+        du[..., 10] = 3*x/r5*(alp1*d*sd + alp2*y*uz)
+        du[..., 11] = 3*x/r5*(-alp1*d*cd + alp2*(d*uz - q))
+        u = u + pot1/(2*np.pi)*du
+    # dip slip contribution
+    if pot2 != 0:
+        du[..., 0]  = alp2*x*p*qr
+        du[..., 1]  = alp1*s/r3 + alp2*y*p*qr
+        du[..., 2]  = -alp1*t/r3 + alp2*d*p*qr
+        du[..., 3]  = alp2*p*qr*a5
+        du[..., 4]  = -alp1*3*x*s/r5 - alp2*y*p*qrx
+        du[..., 5]  = alp1*3*x*t/r5 - alp2*d*p*qrx
+        du[..., 6]  = alp2*3*x/r5*vy
+        du[..., 7]  = alp1*(s2d/r3 - 3*y*s/r5) + alp2*(3*y/r5*vy + p*qr)
+        du[..., 8]  = -alp1*(c2d/r3 - 3*y*t/r5) + alp2*3*d/r5*vy
+        du[..., 9]  = alp2*3*x/r5*vz
+        du[..., 10] = alp1*(c2d/r3 + 3*d*s/r5) + alp2*3*y/r5*vz
+        du[..., 11] = alp1*(s2d/r3 - 3*d*t/r5) + alp2*(3*d/r5*vz - p*qr)
+        u = u + pot2/(2*np.pi)*du
+    # tensile-fault contribution
+    if pot3 != 0:
+        du[..., 0]  = alp1*x/r3 - alp2*x*q*qr
+        du[..., 1]  = alp1*t/r3 - alp2*y*q*qr
+        du[..., 2]  = alp1*s/r3 - alp2*d*q*qr
+        du[..., 3]  = alp1*a3/r3 - alp2*q*qr*a5
+        du[..., 4]  = -alp1*3*x*t/r5 + alp2*y*q*qrx
+        du[..., 5]  = -alp1*3*x*s/r5 + alp2*d*q*qrx
+        du[..., 6]  = -alp1*3*xy/r5 - alp2*x*qr*wy
+        du[..., 7]  = alp1*(c2d/r3 - 3*y*t/r5) - alp2*(y*wy + q)*qr
+        du[..., 8]  = alp1*(s2d/r3 - 3*y*s/r5) - alp2*d*qr*wy
+        du[..., 9]  = alp1*3*x*d/r5 - alp2*x*qr*wz
+        du[..., 10] = -alp1*(s2d/r3 - 3*d*t/r5) - alp2*y*qr*wz
+        du[..., 11] = alp1*(c2d/r3 + 3*d*s/r5) - alp2*(d*wz - q)*qr
+        u = u + pot3/(2*np.pi)*du
+    # inflate source contribution
+    if pot4 != 0:
+        du[..., 0]  = -alp1*x/r3
+        du[..., 1]  = -alp1*y/r3
+        du[..., 2]  = -alp1*d/r3
+        du[..., 3]  = -alp1*a3/r3
+        du[..., 4]  = alp1*3*xy/r5
+        du[..., 5]  = alp1*3*x*d/r5
+        du[..., 6]  = du[..., 4]
+        du[..., 7]  = -alp1*b3/r3
+        du[..., 8]  = alp1*3*y*d/r5
+        du[..., 9]  = -du[..., 5]
+        du[..., 10] = -du[..., 8]
+        du[..., 11] = alp1*c3/r3
+        u = u + pot4/(2*np.pi)*du  
+    return u
+
+def UB0(x,y,d,z,pot1,pot2,pot3,pot4,c0,c1):
+    ## Unpack variables
+    # from DCCON0
+    alp1 = c0['alp1']
+    alp2 = c0['alp2']
+    alp3 = c0['alp3']
+    alp4 = c0['alp4']
+    alp5 = c0['alp5']
+    sd   = c0['sd']
+    cd   = c0['cd']
+    sdsd = c0['sdsd']
+    cdcd = c0['cdcd']
+    sdcd = c0['sdcd']
+    s2d  = c0['s2d']
+    c2d  = c0['c2d']
+
+    # from DCCON1
+    p   = c1['p']
+    q   = c1['q']
+    s   = c1['s']
+    t   = c1['t']
+    xy  = c1['xy']
+    x2  = c1['x2']
+    y2  = c1['y2']
+    d2  = c1['d2']
+    r   = c1['r']
+    r2  = c1['r2']
+    r3  = c1['r3']
+    r5  = c1['r5']
+    qr  = c1['qr']
+    qrx = c1['qrx']
+    a3  = c1['a3']
+    a5  = c1['a5']
+    b3  = c1['b3']
+    c3  = c1['c3']
+    uy  = c1['uy']
+    vy  = c1['vy']
+    wy  = c1['wy']
+    uz  = c1['uz']
+    vz  = c1['vz']
+    wz  = c1['wz']
+    n_x, n_y, n_z = x.shape
+    u = np.zeros((n_x, n_y, n_z,12))
+    du = np.zeros((n_x, n_y, n_z,12))
+
+    c = d + z
+    rd = r + d
+    d12 = 1/(r*rd*rd)
+    d32 = d12*(2*r + d)/r2
+    d33 = d12*(3*r + d)/(r2*rd)
+    d53 = d12*(8*r2 + 9*r*d + d2)/(r2*r2*rd)
+    d54 = d12*(5*r2 + 4*r*d + d2)/r3*d12
+
+    fi1 = y * (d12 - x2 * d33)
+    fi2 = x * (d12 - y2 * d33)
+    fi3 = x/r3 - fi2
+    fi4 = -xy * d32
+    fi5 = 1/(r*rd) - x2 * d32
+    fj1 = -3 * xy * (d33 - x2 * d54)
+    fj2 = 1/r3 - 3 * d12 + 3 * x2 * y2 * d54
+    fj3 = a3/r3 - fj2
+    fj4 = -3 * xy/r5 - fj1
+    fk1 = -y * (d32 - x2 * d53)
+    fk2 = -x * (d32 - y2 * d53)
+    fk3 = -3 * x * d/r5 - fk2
+
+    if pot1 != 0:
+        du[..., 0]  = -x2*qr - alp3*fi1*sd
+        du[..., 1]  = -xy*qr - alp3*fi2*sd
+        du[..., 2]  = -c*x*qr - alp3*fi4*sd
+        du[..., 3]  = -x*qr*(1 + a5) - alp3*1*sd
+        du[..., 4]  = -y*qr*a5 - alp3*2*sd
+        du[..., 5]  = -c*qr*a5 - alp3*3*sd
+        du[..., 6]  = -3*x2/r5*uy - alp3*2*sd
+        du[..., 7]  = -3*xy/r5*uy - x*qr - alp3*4*sd
+        du[..., 8]  = -3*c*x/r5*uy - alp3*3*sd
+        du[..., 9]  = -3*x2/r5*uz + alp3*3*sd
+        du[..., 10] = -3*xy/r5*uz + alp3*3*sd
+        du[..., 11] = 3*x/r5*(-c*uz + alp3*y*sd)
+        u = u + pot1/(2*np.pi)*du
+    if pot2 != 0:
+        du[..., 0]  = -x*p*qr + alp3*fi3*sdcd
+        du[..., 1]  = -y*p*qr + alp3*fi1*sdcd
+        du[..., 2]  = -c*p*qr + alp3*5*sdcd
+        du[..., 3]  = -p*qr*a5 + alp3*3*sdcd
+        du[..., 4]  = y*p*qrx + alp3*1*sdcd
+        du[..., 5]  = c*p*qrx + alp3*3*sdcd
+        du[..., 6]  = -3*x/r5*vy + alp3*1*sdcd
+        du[..., 7]  = -3*y/r5*vy - p*qr + alp3*2*sdcd
+        du[..., 8]  = -3*c/r5*vy + alp3*1*sdcd
+        du[..., 9]  = -3*x/r5*vz - alp3*3*sdcd
+        du[..., 10] = -3*y/r5*vz - alp3*1*sdcd
+        du[..., 11] = -3*c/r5*vz + alp3*a3/r3*sdcd
+        u = u + pot2/(2*np.pi)*du
+    if pot3 != 0:
+        du[..., 0]  = x*q*qr - alp3*fi3*sd
+        du[..., 1]  = y*q*qr - alp3*fi1*sd
+        du[..., 2]  = c*q*qr - alp3*5*sd
+        du[..., 3]  = q*qr*a5 - alp3*3*sd
+        du[..., 4]  = -y*q*qrx - alp3*1*sd
+        du[..., 5]  = -c*q*qrx - alp3*3*sd
+        du[..., 6]  = x*qr*wy - alp3*1*sd
+        du[..., 7]  = qr*(y*wy + q) - alp3*2*sd
+        du[..., 8]  = c*qr*wy - alp3*1*sd
+        du[..., 9]  = x*qr*wz + alp3*3*sd
+        du[..., 10] = y*qr*wz + alp3*1*sd
+        du[..., 11] = c*qr*wz - alp3*a3/r3*sd
+        u = u + pot3/(2*np.pi)*du
+    if pot4 != 0:
+        du[..., 0]  = alp3*x/r3
+        du[..., 1]  = alp3*y/r3
+        du[..., 2]  = alp3*d/r3
+        du[..., 3]  = alp3*a3/r3
+        du[..., 4]  = -alp3*3*xy/r5
+        du[..., 5]  = -alp3*3*x*d/r5
+        du[..., 6]  = du[..., 4]
+        du[..., 7]  = alp3*b3/r3
+        du[..., 8]  = -alp3*3*y*d/r5
+        du[..., 9]  = -du[..., 5]
+        du[..., 10] = -du[..., 8]
+        du[..., 11] = -alp3*c3/r3
+        u = u + pot4/(2*np.pi)*du
+    return u
+
+def UC0(x,y,d,z,pot1,pot2,pot3,pot4,c0,c1):
+    ## Unpack variables
+    # from DCCON0
+    alp1 = c0['alp1']
+    alp2 = c0['alp2']
+    alp3 = c0['alp3']
+    alp4 = c0['alp4']
+    alp5 = c0['alp5']
+    sd   = c0['sd']
+    cd   = c0['cd']
+    sdsd = c0['sdsd']
+    cdcd = c0['cdcd']
+    sdcd = c0['sdcd']
+    s2d  = c0['s2d']
+    c2d  = c0['c2d']
+
+    # from DCCON1
+    p   = c1['p']
+    q   = c1['q']
+    s   = c1['s']
+    t   = c1['t']
+    xy  = c1['xy']
+    x2  = c1['x2']
+    y2  = c1['y2']
+    d2  = c1['d2']
+    r   = c1['r']
+    r2  = c1['r2']
+    r3  = c1['r3']
+    r5  = c1['r5']
+    qr  = c1['qr']
+    qrx = c1['qrx']
+    a3  = c1['a3']
+    a5  = c1['a5']
+    b3  = c1['b3']
+    c3  = c1['c3']
+    uy  = c1['uy']
+    vy  = c1['vy']
+    wy  = c1['wy']
+    uz  = c1['uz']
+    vz  = c1['vz']
+    wz  = c1['wz']
+    n_x, n_y, n_z = x.shape
+    u = np.zeros((n_x, n_y, n_z,12))
+    du = np.zeros((n_x, n_y, n_z,12))
+
+    c = d + z
+    q2 = q * q
+    r7 = r5 * r2
+    a7 = 1 - 7 * x2 / r2
+    b5 = 1 - 5 * y2 / r2
+    b7 = 1 - 7 * y2 / r2
+    c5 = 1 - 5 * d2 / r2
+    c7 = 1 - 7 * d2 / r2
+    d7 = 2 - 7 * q2 / r2
+    qr5 = 5 * q / r2
+    qr7 = 7 * q / r2
+    dr5 = 5 * d / r2
+
+    if pot1 != 0:
+        du[..., 0]= -alp4*a3/r3*cd + alp5*c*qr*a5
+        du[..., 1]= 3*x/r5*(alp4*y*cd + alp5*c*(sd-y*qr5))
+        du[..., 2]= 3*x/r5*(-alp4*y*sd + alp5*c*(cd+d*qr5))
+        du[..., 3]= alp4*3*x/r5*(2+a5)*cd - alp5*c*qrx*(2+a7)
+        du[..., 4]= 3/r5*(alp4*y*a5*cd + alp5*c*(a5*sd-y*qr5*a7))
+        du[..., 5]= 3/r5*(-alp4*y*a5*sd + alp5*c*(a5*cd+d*qr5*a7))
+        du[..., 6]= du[..., 4]
+        du[..., 7]= 3*x/r5*(alp4*b5*cd - alp5*5*c/r2*(2*y*sd+q*b7))
+        du[..., 8]= 3*x/r5*(-alp4*b5*sd + alp5*5*c/r2*(d*b7*sd-y*c7*cd))
+        du[..., 9]= 3/r5*(-alp4*d*a5*cd + alp5*c*(a5*cd+d*qr5*a7))
+        du[..., 10]= 15*x/r7*(alp4*y*d*cd + alp5*c*(d*b7*sd-y*c7*cd))
+        du[..., 11]= 15*x/r7*(-alp4*y*d*sd + alp5*c*(2*d*cd-q*c7))
+        u = u + pot1/(2*np.pi)*du
+    if pot2 != 0:
+        du[..., 0]= alp4*3*x*t/r5 - alp5*c*p*qrx
+        du[..., 1]= -alp4/r3*(c2d-3*y*t/r2) + alp5*3*c/r5*(s-y*p*qr5)
+        du[..., 2]= -alp4*a3/r3*sdcd + alp5*3*c/r5*(t+d*p*qr5)
+        du[..., 3]= alp4*3*t/r5*a5 - alp5*5*c*p*qr/r2*a7
+        du[..., 4]= 3*x/r5*(alp4*(c2d-5*y*t/r2)-alp5*5*c/r2*(s-y*p*qr7))
+        du[..., 5]= 3*x/r5*(alp4*(2+a5)*sdcd - alp5*5*c/r2*(t+d*p*qr7))
+        du[..., 6]= du[..., 4]
+        du[..., 7]= 3/r5*(alp4*(2*y*c2d+t*b5) + alp5*c*(s2d-10*y*s/r2-p*qr5*b7))
+        du[..., 8]= 3/r5*(alp4*y*a5*sdcd - alp5*c*((3+a5)*c2d+y*p*dr5*qr7))
+        du[..., 9]= 3*x/r5*(-alp4*(s2d-t*dr5) - alp5*5*c/r2*(t+d*p*qr7))
+        du[..., 10]= 3/r5*(-alp4*(d*b5*c2d+y*c5*s2d) - alp5*c*((3+a5)*c2d+y*p*dr5*qr7))
+        du[..., 11]= 3/r5*(-alp4*d*a5*sdcd - alp5*c*(s2d-10*d*t/r2+p*qr5*c7))
+        u = u + pot2/(2*np.pi)*du
+    if pot3 != 0:
+        du[..., 0]= 3*x/r5*(-alp4*s + alp5*(c*q*qr5-z))
+        du[..., 1]= alp4/r3*(s2d-3*y*s/r2) + alp5*3/r5*(c*(t-y+y*q*qr5)-y*z)
+        du[..., 2]= -alp4/r3*(1-a3*sdsd) - alp5*3/r5*(c*(s-d+d*q*qr5)-d*z)
+        du[..., 3]= -alp4*3*s/r5*a5 + alp5*(c*qr*qr5*a7-3*z/r5*a5)
+        du[..., 4]= 3*x/r5*(-alp4*(s2d-5*y*s/r2) - alp5*5/r2*(c*(t-y+y*q*qr7)-y*z))
+        du[..., 5]= 3*x/r5*(alp4*(1-(2+a5)*sdsd) + alp5*5/r2*(c*(s-d+d*q*qr7)-d*z))
+        du[..., 6]= du[..., 4]
+        du[..., 7]= 3/r5*(-alp4*(2*y*s2d+s*b5) - alp5*(c*(2*sdsd+10*y*(t-y)/r2-q*qr5*b7)+z*b5))
+        du[..., 8]= 3/r5*(alp4*y*(1-a5*sdsd) + alp5*(c*(3+a5)*s2d-y*dr5*(c*d7+z)))
+        du[..., 9]= 3*x/r5*(-alp4*(c2d+s*dr5) + alp5*(5*c/r2*(s-d+d*q*qr7)-1-z*dr5))
+        du[..., 10]= 3/r5*(alp4*(d*b5*s2d-y*c5*c2d) + alp5*(c*((3+a5)*s2d-y*dr5*d7)-y*(1+z*dr5)))
+        du[..., 11]= 3/r5*(-alp4*d*(1-a5*sdsd) - alp5*(c*(c2d+10*d*(s-d)/r2-q*qr5*c7)+z*(1+c5)))
+        u = u + pot3/(2*np.pi)*du
+    if pot4 != 0:
+        du[..., 0]= alp4*3*x*d/r5
+        du[..., 1]= alp4*3*y*d/r5
+        du[..., 2]= alp4*c3/r3
+        du[..., 3]= alp4*3*d/r5*a5
+        du[..., 4]= -alp4*15*xy*d/r7
+        du[..., 5]= -alp4*3*x/r5*c5
+        du[..., 6]= du[..., 4]
+        du[..., 7]= alp4*3*d/r5*b5
+        du[..., 8]= -alp4*3*y/r5*c5
+        du[..., 9]= du[..., 5]
+        du[..., 10]= alp4*3*d/r5*(2+c5)
+        u = u + pot4/(2*np.pi)*du
+    return u
+
 def UA(xi,et,q,disl1,disl2,disl3,c0,c2):
     ## UNPACK VARIABLES
     # From DCCON0

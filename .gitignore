@@ -6,3 +6,17 @@
 *.png
 *.m
 .ipynb_checkpoints/streamlined_scripts_validation-checkpoint.ipynb
+/.ipynb_checkpoints
+.DS_Store
+/deprecated_tests/.ipynb_checkpoints
+*.csv
+*.mp4
+/EGU/.ipynb_checkpoints
+/okada_python_scripts_streamlined/.ipynb_checkpoints
+*.npz
+*.shp
+*.shx
+*.html
+/EGU
+/deprecated_tests
+*.pkl

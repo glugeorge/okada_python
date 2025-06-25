@@ -1,0 +1,21 @@
+%% Unit tests
+% This code should run and generate standard results that will be compared
+% concurrently with a python script. We will vary between:
+% - square grid (patch 1.2) and rotated grid (patch 2) (from lakes)
+% - strikes of 0, 10, 90
+% - dips of 0, 10, 90
+% - rakes of 0, 10, 90
+% - unit slip, unit opening
+
+% define square grid
+n_x = 100; n_y = 102;
+x = linspace(-1,1,n_x);
+y = linspace(-1,1,n_y);
+[x_grid,y_grid] = meshgrid(x,y);
+
+strikes = [0,10,90];
+dips = [0,10,90];
+rakes = [0,10,90];
+slips = [0,1];
+openings = [0,1];
+
